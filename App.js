@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text as RNText } from 'react-native';
-import { Provider as PaperProvider, Text, Button, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Text as RNText, LinearGradient } from 'react-native';
+import { Provider as PaperProvider, Text, Button, ActivityIndicator, Card, Chip, Divider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
@@ -101,47 +101,92 @@ export default function App() {
       <View style={styles.container}>
         <StatusBar style="auto" />
         
-        {/* Header simples */}
+        {/* Header moderno com gradiente */}
         <View style={styles.header}>
-          <Text style={styles.title}>🎮 RPG Manager</Text>
-          <Text style={styles.subtitle}>
-            Gerenciador de Personagens ({characters.length} {characters.length === 1 ? 'personagem' : 'personagens'})
-          </Text>
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>🎮 RPG Manager</Text>
+            <Text style={styles.subtitle}>
+              {characters.length} {characters.length === 1 ? 'herói' : 'heróis'} disponíveis
+            </Text>
+          </View>
         </View>
         
-        {/* Lista de personagens */}
-        <ScrollView style={styles.content}>
+        {/* Lista de personagens moderna */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {characters.map((character) => (
-            <View key={character.id} style={styles.characterCard}>
-              <View style={styles.characterHeader}>
-                <Text style={styles.characterName}>{character.name}</Text>
-                <Text style={styles.characterClass}>{character.class}</Text>
-              </View>
-              <View style={styles.characterStats}>
-                <Text>Nível: {character.level}</Text>
-                <Text>❤️ HP: {character.health}</Text>
-                <Text>⚡ MP: {character.mana}</Text>
-              </View>
-              <Button 
-                mode={character.isRecruited ? "outlined" : "contained"}
-                onPress={() => {
-                  setCharacters(chars => 
-                    chars.map(c => 
-                      c.id === character.id 
-                        ? { ...c, isRecruited: c.isRecruited ? 0 : 1 }
-                        : c
-                    )
-                  );
-                }}
-                style={styles.recruitButton}
-              >
-                {character.isRecruited ? 'Desertar' : 'Recrutar'}
-              </Button>
-            </View>
+            <Card key={character.id} style={styles.characterCard} elevation={4}>
+              <Card.Content>
+                <View style={styles.characterHeader}>
+                  <View style={styles.characterInfo}>
+                    <Text style={styles.characterName}>{character.name}</Text>
+                    <Chip 
+                      mode="outlined" 
+                      style={[styles.classChip, { backgroundColor: getClassColor(character.class) }]}
+                      textStyle={styles.classChipText}
+                    >
+                      {character.class}
+                    </Chip>
+                  </View>
+                  <View style={styles.levelBadge}>
+                    <Text style={styles.levelText}>Nv. {character.level}</Text>
+                  </View>
+                </View>
+                
+                <Divider style={styles.divider} />
+                
+                <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statIcon}>❤️</Text>
+                    <View style={styles.statInfo}>
+                      <Text style={styles.statLabel}>Vida</Text>
+                      <Text style={styles.statValue}>{character.health}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.statItem}>
+                    <Text style={styles.statIcon}>⚡</Text>
+                    <View style={styles.statInfo}>
+                      <Text style={styles.statLabel}>Mana</Text>
+                      <Text style={styles.statValue}>{character.mana}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.statItem}>
+                    <Text style={styles.statIcon}>⚔️</Text>
+                    <View style={styles.statInfo}>
+                      <Text style={styles.statLabel}>Status</Text>
+                      <Text style={[styles.statValue, { color: character.isRecruited ? '#4caf50' : '#ff9800' }]}>
+                        {character.isRecruited ? 'Ativo' : 'Livre'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </Card.Content>
+              
+              <Card.Actions style={styles.cardActions}>
+                <Button 
+                  mode={character.isRecruited ? "outlined" : "contained"}
+                  onPress={() => {
+                    setCharacters(chars => 
+                      chars.map(c => 
+                        c.id === character.id 
+                          ? { ...c, isRecruited: c.isRecruited ? 0 : 1 }
+                          : c
+                      )
+                    );
+                  }}
+                  style={styles.recruitButton}
+                  buttonColor={character.isRecruited ? 'transparent' : '#6200ee'}
+                  textColor={character.isRecruited ? '#6200ee' : 'white'}
+                >
+                  {character.isRecruited ? '🚪 Dispensar' : '⚔️ Recrutar'}
+                </Button>
+              </Card.Actions>
+            </Card>
           ))}
         </ScrollView>
 
-        {/* Botão adicionar */}
+        {/* Botão flutuante moderno */}
         <View style={styles.footer}>
           <Button 
             mode="contained" 
@@ -174,8 +219,11 @@ export default function App() {
               });
             }}
             style={styles.addButton}
+            buttonColor="#6200ee"
+            icon="plus"
+            contentStyle={styles.addButtonContent}
           >
-            ➕ Adicionar Personagem
+            ✨ Novo Herói
           </Button>
         </View>
       </View>
@@ -183,105 +231,197 @@ export default function App() {
   );
 }
 
+// Função para cores das classes
+const getClassColor = (className) => {
+  const colors = {
+    'Guerreiro': '#ffebee',
+    'Mago': '#e8eaf6',
+    'Arqueiro': '#e8f5e8',
+    'Ladino': '#fce4ec',
+    'Paladino': '#fff3e0',
+    'Druida': '#f1f8e9',
+    'Anão': '#efebe9',
+    'Aventureiro': '#f3e5f5'
+  };
+  return colors[className] || '#f5f5f5';
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
     backgroundColor: '#6200ee',
-    padding: 20,
-    paddingTop: 40,
+    background: 'linear-gradient(135deg, #6200ee 0%, #3700b3 100%)',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 8,
+    shadowColor: '#6200ee',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  headerContent: {
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#e1bee7',
+    opacity: 0.9,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
+    paddingTop: 25,
   },
   characterCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
+    borderRadius: 16,
+    marginBottom: 20,
+    overflow: 'hidden',
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   characterHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 15,
+  },
+  characterInfo: {
+    flex: 1,
   },
   characterName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 6,
   },
-  characterClass: {
-    fontSize: 14,
-    color: '#666',
-    backgroundColor: '#e3f2fd',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  classChip: {
+    alignSelf: 'flex-start',
+    borderWidth: 0,
+    elevation: 2,
   },
-  characterStats: {
+  classChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#424242',
+  },
+  levelBadge: {
+    backgroundColor: '#6200ee',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    elevation: 2,
+  },
+  levelText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  divider: {
+    marginVertical: 15,
+    backgroundColor: '#e0e0e0',
+  },
+  statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  statInfo: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  cardActions: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 0,
   },
   recruitButton: {
-    marginTop: 8,
+    flex: 1,
+    borderRadius: 12,
+    elevation: 2,
   },
   footer: {
-    padding: 16,
+    padding: 20,
     backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    elevation: 4,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   addButton: {
+    borderRadius: 15,
+    elevation: 4,
+    shadowColor: '#6200ee',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  addButtonContent: {
     paddingVertical: 8,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
   },
   errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#d32f2f',
     marginBottom: 8,
+    textAlign: 'center',
   },
   errorText: {
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    lineHeight: 20,
   },
 });
