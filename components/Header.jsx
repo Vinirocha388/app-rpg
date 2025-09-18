@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Appbar, Title, Subtitle, Menu, Button } from 'react-native-paper';
+import { Appbar, Title, Subtitle, Menu, Button, Chip } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const Header = ({ title, subtitle, filter, onFilterChange }) => {
+const Header = ({ title, subtitle, filter, classFilter, onFilterChange, onClassFilterChange }) => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [classMenuVisible, setClassMenuVisible] = useState(false);
 
   const filterOptions = [
     { value: 'all', label: 'Todos', icon: 'people' },
     { value: 'recruited', label: 'Recrutados', icon: 'person-add' },
     { value: 'available', label: 'Disponíveis', icon: 'person-outline' },
+  ];
+  
+  const classOptions = [
+    { value: null, label: 'Todas Classes', icon: 'category' },
+    { value: 'Guerreiro', label: 'Guerreiro', icon: 'sports-handball' },
+    { value: 'Mago', label: 'Mago', icon: 'auto-fix-high' },
+    { value: 'Arqueiro', label: 'Arqueiro', icon: 'my-location' },
+    { value: 'Anão', label: 'Anão', icon: 'construction' },
+    { value: 'Paladino', label: 'Paladino', icon: 'shield' },
+    { value: 'Ladino', label: 'Ladino', icon: 'visibility-off' },
+    { value: 'Bárbaro', label: 'Bárbaro', icon: 'fitness-center' },
+    { value: 'Clérigo', label: 'Clérigo', icon: 'healing' },
   ];
 
   const getCurrentFilterLabel = () => {
@@ -20,6 +33,16 @@ const Header = ({ title, subtitle, filter, onFilterChange }) => {
   const getCurrentFilterIcon = () => {
     const current = filterOptions.find(option => option.value === filter);
     return current ? current.icon : 'people';
+  };
+  
+  const getCurrentClassLabel = () => {
+    const current = classOptions.find(option => option.value === classFilter);
+    return current ? current.label : 'Todas Classes';
+  };
+
+  const getCurrentClassIcon = () => {
+    const current = classOptions.find(option => option.value === classFilter);
+    return current ? current.icon : 'category';
   };
 
   return (
@@ -33,21 +56,50 @@ const Header = ({ title, subtitle, filter, onFilterChange }) => {
           </View>
         </View>
         
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <Button
-              mode="contained-tonal"
-              onPress={() => setMenuVisible(true)}
-              icon={getCurrentFilterIcon()}
-              style={styles.filterButton}
-              labelStyle={styles.filterButtonText}
-            >
-              {getCurrentFilterLabel()}
-            </Button>
-          }
-        >
+        <View style={styles.filterContainer}>
+          <Menu
+            visible={classMenuVisible}
+            onDismiss={() => setClassMenuVisible(false)}
+            anchor={
+              <Button
+                mode="contained-tonal"
+                onPress={() => setClassMenuVisible(true)}
+                icon={getCurrentClassIcon()}
+                style={[styles.filterButton, styles.classFilterButton]}
+                labelStyle={styles.filterButtonText}
+              >
+                {classFilter ? getCurrentClassLabel() : 'Classe'}
+              </Button>
+            }
+          >
+            {classOptions.map((option) => (
+              <Menu.Item
+                key={option.value || 'all-classes'}
+                onPress={() => {
+                  onClassFilterChange(option.value);
+                  setClassMenuVisible(false);
+                }}
+                title={option.label}
+                leadingIcon={option.icon}
+              />
+            ))}
+          </Menu>
+          
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <Button
+                mode="contained-tonal"
+                onPress={() => setMenuVisible(true)}
+                icon={getCurrentFilterIcon()}
+                style={styles.filterButton}
+                labelStyle={styles.filterButtonText}
+              >
+                {getCurrentFilterLabel()}
+              </Button>
+            }
+          >
           {filterOptions.map((option) => (
             <Menu.Item
               key={option.value}
@@ -60,7 +112,8 @@ const Header = ({ title, subtitle, filter, onFilterChange }) => {
               titleStyle={filter === option.value ? styles.selectedMenuItem : null}
             />
           ))}
-        </Menu>
+          </Menu>
+        </View>
       </Appbar.Header>
       
       <View style={styles.statsContainer}>
@@ -91,6 +144,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  classFilterButton: {
+    marginRight: 8,
   },
   titleContainer: {
     flexDirection: 'row',

@@ -1,12 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text as RNText, LinearGradient } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Text as RNText } from 'react-native';
 import { Provider as PaperProvider, Text, Button, ActivityIndicator, Card, Chip, Divider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
+import { MaterialIcons } from '@expo/vector-icons';
+import TeamStats from './components/TeamStats';
+import Header from './components/Header';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [characters, setCharacters] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState(null);
+  
+  // Função auxiliar para obter cor de cada classe
+  const getClassColor = (characterClass) => {
+    const colors = {
+      'Guerreiro': '#e74c3c',
+      'Mago': '#3498db',
+      'Arqueiro': '#27ae60',
+      'Anão': '#f39c12',
+      'Paladino': '#9b59b6',
+      'Ladino': '#34495e',
+      'Bárbaro': '#e67e22',
+      'Clérigo': '#f1c40f',
+    };
+    return colors[characterClass] || '#95a5a6';
+  };
 
   console.log('🎮 App iniciando...');
 
@@ -101,19 +121,86 @@ export default function App() {
       <View style={styles.container}>
         <StatusBar style="auto" />
         
-        {/* Header moderno com gradiente */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.title}>🎮 RPG Manager</Text>
-            <Text style={styles.subtitle}>
-              {characters.length} {characters.length === 1 ? 'herói' : 'heróis'} disponíveis
-            </Text>
-          </View>
-        </View>
+        {/* Header com filtros */}
+        <Header 
+          title="🎮 RPG Manager" 
+          subtitle={`${characters.length} ${characters.length === 1 ? 'herói' : 'heróis'} disponíveis`}
+          filter={filter}
+          classFilter={classFilter}
+          onFilterChange={setFilter}
+          onClassFilterChange={setClassFilter}
+        />
         
         {/* Lista de personagens moderna */}
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {characters.map((character) => (
+          {/* Chips para mostrar filtros ativos */}
+          {(filter !== 'all' || classFilter) && (
+            <View style={styles.activeFiltersContainer}>
+              <Text style={styles.activeFiltersLabel}>Filtros ativos:</Text>
+              <View style={styles.filtersChipContainer}>
+                {filter !== 'all' && (
+                  <Chip 
+                    icon={filter === 'recruited' ? 'person-add' : 'person-outline'} 
+                    mode="flat" 
+                    onClose={() => setFilter('all')} 
+                    style={styles.filterChip}
+                  >
+                    {filter === 'recruited' ? 'Recrutados' : 'Disponíveis'}
+                  </Chip>
+                )}
+                {classFilter && (
+                  <Chip 
+                    icon="category" 
+                    mode="flat" 
+                    onClose={() => setClassFilter(null)} 
+                    style={styles.filterChip}
+                  >
+                    {classFilter}
+                  </Chip>
+                )}
+              </View>
+            </View>
+          )}
+          
+          {/* Componente de estatísticas do time */}
+          <TeamStats characters={characters} />
+          
+          {/* Lista filtrada de personagens */}
+          {(() => {
+            const filteredCharacters = characters
+              .filter(character => {
+                // Filtro por status de recrutamento
+                if (filter === 'all') return true;
+                if (filter === 'recruited') return character.isRecruited;
+                if (filter === 'available') return !character.isRecruited;
+                return true;
+              })
+              .filter(character => {
+                // Filtro por classe
+                if (!classFilter) return true;
+                return character.class === classFilter;
+              });
+            
+            if (filteredCharacters.length === 0) {
+              return (
+                <View style={styles.emptyFilterContainer}>
+                  <MaterialIcons name="filter-alt-off" size={48} color="#ccc" />
+                  <Text style={styles.emptyFilterTitle}>Nenhum herói encontrado</Text>
+                  <Text style={styles.emptyFilterText}>
+                    Nenhum personagem corresponde aos filtros selecionados.
+                  </Text>
+                  <Button 
+                    mode="outlined" 
+                    onPress={() => {setFilter('all'); setClassFilter(null);}}
+                    style={{marginTop: 12}}
+                  >
+                    Limpar filtros
+                  </Button>
+                </View>
+              );
+            }
+            
+            return filteredCharacters.map((character) => (
             <Card key={character.id} style={styles.characterCard} elevation={4}>
               <Card.Content>
                 <View style={styles.characterHeader}>
@@ -183,7 +270,8 @@ export default function App() {
                 </Button>
               </Card.Actions>
             </Card>
-          ))}
+          ));
+          })()}
         </ScrollView>
 
         {/* Botão flutuante moderno */}
@@ -376,6 +464,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     paddingTop: 0,
+  },
+  activeFiltersContainer: {
+    padding: 16,
+    paddingBottom: 8,
+  },
+  activeFiltersLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  filtersChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  filterChip: {
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  emptyFilterContainer: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: '#f9f9f9',
+    margin: 16,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  emptyFilterTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyFilterText: {
+    textAlign: 'center',
+    color: '#666',
   },
   recruitButton: {
     flex: 1,
